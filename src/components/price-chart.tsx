@@ -49,7 +49,7 @@ export function PriceChart({ data, colors: {
         // Mock data generation if empty
         const initialData = data.length > 0 ? data : generateMockData();
 
-        const newSeries = chart.addAreaSeries({ lineColor, topColor: areaTopColor, bottomColor: areaBottomColor });
+        const newSeries = (chart as any).addAreaSeries({ lineColor, topColor: areaTopColor, bottomColor: areaBottomColor });
         newSeries.setData(initialData);
 
         window.addEventListener('resize', handleResize);
