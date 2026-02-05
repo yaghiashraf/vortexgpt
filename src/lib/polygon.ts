@@ -1,8 +1,8 @@
 
-const POLYGON_API_KEY = process.env.POLYGON_API_KEY;
+const MASSIVE_API_KEY = process.env.MASSIVE_API_KEY || process.env.POLYGON_API_KEY;
 
 export async function getMarketData(ticker: string) {
-  if (!POLYGON_API_KEY || POLYGON_API_KEY === 'polygon_placeholder') {
+  if (!MASSIVE_API_KEY || MASSIVE_API_KEY === 'VK2vL795JiRsIW1ra0pF_To7Qq3pNbnE_placeholder') {
       // Mock data for prototype
       return {
           price: 150.00 + Math.random() * 10,
@@ -14,12 +14,13 @@ export async function getMarketData(ticker: string) {
       };
   }
 
+  // massive.com API endpoint based on user input
   const response = await fetch(
-    `https://api.polygon.io/v2/aggs/ticker/${ticker}/prev?apiKey=${POLYGON_API_KEY}`
+    `https://api.massive.com/v1/quotes/${ticker}?apiKey=${MASSIVE_API_KEY}`
   );
   
   if (!response.ok) {
-     console.error("Polygon API Error", await response.text());
+     console.error("Massive API Error", await response.text());
      // Fallback to mock on error for stability
      return {
           price: 150.00 + Math.random() * 10,
@@ -32,25 +33,13 @@ export async function getMarketData(ticker: string) {
   }
   
   const data = await response.json();
-  const result = data.results?.[0];
   
-  if (!result) {
-     return {
-        price: 0,
-        open: 0,
-        high: 0,
-        low: 0,
-        volume: 0,
-        changePercent: 0
-     }
-  }
-
   return {
-    price: result.c,
-    open: result.o,
-    high: result.h,
-    low: result.l,
-    volume: result.v,
-    changePercent: ((result.c - result.o) / result.o) * 100,
+    price: data.price || data.last || 0,
+    open: data.open || 0,
+    high: data.high || 0,
+    low: data.low || 0,
+    volume: data.volume || 0,
+    changePercent: data.changePercent || 0,
   };
 }
