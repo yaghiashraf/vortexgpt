@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -52,7 +51,6 @@ export default function AnalyzePage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
@@ -73,16 +71,14 @@ export default function AnalyzePage() {
         </div>
       </div>
 
-      {/* Main Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Left Col: Chart & Chat */}
           <div className="md:col-span-2 space-y-6">
               <Card>
                   <CardHeader>
                       <CardTitle>Price Action</CardTitle>
                   </CardHeader>
                   <CardContent className="p-0 pb-4">
-                      <PriceChart data={[]} /> {/* Passes empty, uses mock internal */}
+                      <PriceChart data={[]} />
                   </CardContent>
               </Card>
 
@@ -96,7 +92,6 @@ export default function AnalyzePage() {
               </Card>
           </div>
 
-          {/* Right Col: Analysis */}
           <div className="space-y-6">
               <AiSummaryCard data={data} />
               
