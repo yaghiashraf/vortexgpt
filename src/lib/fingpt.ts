@@ -1,9 +1,10 @@
 
 import { HfInference } from '@huggingface/inference';
+import { MarketData } from '@/types';
 
 const hf = new HfInference(process.env.HF_API_TOKEN);
 
-export async function analyzeTicker(ticker: string, marketData: any) {
+export async function analyzeTicker(ticker: string, marketData: MarketData) {
     if (!process.env.HF_API_TOKEN || process.env.HF_API_TOKEN === 'hf_placeholder') {
         // Mock analysis
         const sentiment = Math.random() * 2 - 1; // -1 to 1

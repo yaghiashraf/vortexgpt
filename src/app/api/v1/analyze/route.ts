@@ -7,6 +7,7 @@ import { getMarketData } from '@/lib/polygon';
 export async function POST(req: Request) {
   const cookieStore = await cookies();
 
+  /*
   // Create a Supabase client configured to use cookies
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -30,6 +31,7 @@ export async function POST(req: Request) {
       },
     }
   )
+  */
   
   // Optional: Check auth
   // const { data: { user } } = await supabase.auth.getUser();

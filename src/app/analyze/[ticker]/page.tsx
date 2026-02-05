@@ -18,27 +18,27 @@ export default function AnalyzePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    async function fetchAnalysis() {
+        try {
+            const res = await fetch('/api/v1/analyze', {
+            method: 'POST',
+            body: JSON.stringify({ ticker }),
+            });
+            
+            if (res.ok) {
+            setData(await res.json());
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    }
+
     if (ticker) {
         fetchAnalysis();
     }
   }, [ticker]);
-
-  async function fetchAnalysis() {
-    try {
-        const res = await fetch('/api/v1/analyze', {
-        method: 'POST',
-        body: JSON.stringify({ ticker }),
-        });
-        
-        if (res.ok) {
-        setData(await res.json());
-        }
-    } catch (e) {
-        console.error(e);
-    } finally {
-        setLoading(false);
-    }
-  }
 
   if (loading) return (
       <div className="flex h-full items-center justify-center flex-col space-y-4">

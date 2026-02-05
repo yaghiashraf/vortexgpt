@@ -1,8 +1,13 @@
 
 'use client';
 
-import { createChart, ColorType } from 'lightweight-charts';
+import { createChart, ColorType, ISeriesApi, SeriesType } from 'lightweight-charts';
 import { useEffect, useRef } from 'react';
+
+interface ChartData {
+    time: string;
+    value: number;
+}
 
 export function PriceChart({ data, colors: {
     backgroundColor = 'transparent',
@@ -10,14 +15,22 @@ export function PriceChart({ data, colors: {
     textColor = 'black',
     areaTopColor = '#2962FF',
     areaBottomColor = 'rgba(41, 98, 255, 0.28)',
-} = {} }: { data: any[], colors?: any }) {
+} = {} }: { data: ChartData[], colors?: {
+    backgroundColor?: string;
+    lineColor?: string;
+    textColor?: string;
+    areaTopColor?: string;
+    areaBottomColor?: string;
+} }) {
     const chartContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (!chartContainerRef.current) return;
 
         const handleResize = () => {
-            chart.applyOptions({ width: chartContainerRef.current!.clientWidth });
+            if (chartContainerRef.current) {
+                chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+            }
         };
 
         const chart = createChart(chartContainerRef.current, {
@@ -36,7 +49,7 @@ export function PriceChart({ data, colors: {
         // Mock data generation if empty
         const initialData = data.length > 0 ? data : generateMockData();
 
-        const newSeries = (chart as any).addAreaSeries({ lineColor, topColor: areaTopColor, bottomColor: areaBottomColor });
+        const newSeries = chart.addAreaSeries({ lineColor, topColor: areaTopColor, bottomColor: areaBottomColor });
         newSeries.setData(initialData);
 
         window.addEventListener('resize', handleResize);
@@ -52,8 +65,8 @@ export function PriceChart({ data, colors: {
     );
 }
 
-function generateMockData() {
-    const data = [];
+function generateMockData(): ChartData[] {
+    const data: ChartData[] = [];
     let price = 150;
     const date = new Date();
     date.setMonth(date.getMonth() - 1);
