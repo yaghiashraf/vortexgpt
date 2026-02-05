@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, TrendingUp, TrendingDown } from "lucide-react";
@@ -12,6 +13,16 @@ const watchlistMock = [
 ];
 
 export function WatchlistSidebar() {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) {
+        return <div className="w-64 border-r h-[calc(100vh-64px)] hidden md:block bg-muted/10 animate-pulse" />;
+    }
+
     return (
         <div className="w-64 border-r h-[calc(100vh-64px)] hidden md:block bg-muted/10">
             <div className="p-4 flex items-center justify-between border-b">

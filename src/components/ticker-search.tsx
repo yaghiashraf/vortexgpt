@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
@@ -9,7 +9,12 @@ import { useRouter } from 'next/navigation';
 
 export function TickerSearch() {
   const [ticker, setTicker] = useState('');
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,6 +22,10 @@ export function TickerSearch() {
       router.push(`/analyze/${ticker.toUpperCase()}`);
     }
   };
+
+  if (!mounted) {
+    return <div className="h-10 w-full max-w-sm bg-muted animate-pulse rounded-md" />;
+  }
 
   return (
     <form onSubmit={handleSearch} className="relative w-full max-w-sm">

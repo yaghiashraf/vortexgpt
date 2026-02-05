@@ -10,6 +10,12 @@ import { SentimentGauge } from '@/components/sentiment-gauge';
 import { AiSummaryCard } from '@/components/ai-summary-card';
 import { AnalysisData } from '@/types';
 import { useParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
+
+const PriceChart = dynamic(() => import('@/components/price-chart').then(mod => mod.PriceChart), { 
+  ssr: false,
+  loading: () => <div className="h-[300px] w-full bg-muted animate-pulse rounded-md" />
+});
 
 export default function AnalyzePage() {
   const params = useParams();
