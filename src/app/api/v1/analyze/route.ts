@@ -2,40 +2,10 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { analyzeTicker } from '@/lib/fingpt';
-import { getMarketData } from '@/lib/polygon';
+import { getMarketData, getHistoricalData } from '@/lib/market-data';
 
 export async function POST(req: Request) {
   const cookieStore = await cookies();
-
-  /*
-  // Create a Supabase client configured to use cookies
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
-        },
-      },
-    }
-  )
-  */
-  
-  // Optional: Check auth
-  // const { data: { user } } = await supabase.auth.getUser();
-  // if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
       const { ticker } = await req.json();
@@ -43,8 +13,11 @@ export async function POST(req: Request) {
 
       const upperTicker = ticker.toUpperCase();
 
-      // Get market data
-      const marketData = await getMarketData(upperTicker);
+      // Get market data (parallel)
+      const [marketData, history] = await Promise.all([
+          getMarketData(upperTicker),
+          getHistoricalData(upperTicker)
+      ]);
 
       // Call FinGPT
       const analysis = await analyzeTicker(upperTicker, marketData);
@@ -58,6 +31,7 @@ export async function POST(req: Request) {
           changePercent: marketData.changePercent,
           volume: marketData.volume,
         },
+        history, 
       });
   } catch (error) {
       console.error("API Error", error);

@@ -1,27 +1,17 @@
-
 'use client';
 
-import { createChart, ColorType, ISeriesApi, SeriesType } from 'lightweight-charts';
+import { createChart, ColorType, ISeriesApi } from 'lightweight-charts';
 import { useEffect, useRef } from 'react';
 
-interface ChartData {
+export interface Candle {
     time: string;
-    value: number;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
 }
 
-export function PriceChart({ data, colors: {
-    backgroundColor = 'transparent',
-    lineColor = '#2962FF',
-    textColor = 'black',
-    areaTopColor = '#2962FF',
-    areaBottomColor = 'rgba(41, 98, 255, 0.28)',
-} = {} }: { data: ChartData[], colors?: {
-    backgroundColor?: string;
-    lineColor?: string;
-    textColor?: string;
-    areaTopColor?: string;
-    areaBottomColor?: string;
-} }) {
+export function PriceChart({ data }: { data: Candle[] }) {
     const chartContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -35,22 +25,41 @@ export function PriceChart({ data, colors: {
 
         const chart = createChart(chartContainerRef.current, {
             layout: {
-                background: { type: ColorType.Solid, color: backgroundColor },
-                textColor,
+                background: { type: ColorType.Solid, color: 'transparent' },
+                textColor: '#94a3b8', // text-muted-foreground
             },
             width: chartContainerRef.current.clientWidth,
-            height: 300,
+            height: 400,
             grid: {
                 vertLines: { visible: false },
-                horzLines: { color: '#334155' }, // Slate-700
+                horzLines: { color: '#1e293b' }, // slate-800
             },
+            rightPriceScale: {
+                borderColor: '#1e293b',
+            },
+            timeScale: {
+                borderColor: '#1e293b',
+            }
         });
-        
-        // Mock data generation if empty
-        const initialData = data.length > 0 ? data : generateMockData();
 
-        const newSeries = (chart as any).addAreaSeries({ lineColor, topColor: areaTopColor, bottomColor: areaBottomColor });
-        newSeries.setData(initialData);
+        const candlestickSeries = (chart as any).addCandlestickSeries({
+            upColor: '#22c55e', // green-500
+            downColor: '#ef4444', // red-500
+            borderVisible: false,
+            wickUpColor: '#22c55e',
+            wickDownColor: '#ef4444',
+        });
+
+        // Ensure data is sorted by time and valid
+        const validData = data
+            .filter(d => d.time && !isNaN(d.close))
+            .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+
+        if (validData.length > 0) {
+            candlestickSeries.setData(validData);
+        }
+
+        chart.timeScale().fitContent();
 
         window.addEventListener('resize', handleResize);
 
@@ -58,23 +67,9 @@ export function PriceChart({ data, colors: {
             window.removeEventListener('resize', handleResize);
             chart.remove();
         };
-    }, [data, backgroundColor, lineColor, textColor, areaTopColor, areaBottomColor]);
+    }, [data]);
 
     return (
-        <div ref={chartContainerRef} className="w-full h-[300px]" />
+        <div ref={chartContainerRef} className="w-full h-[400px]" />
     );
-}
-
-function generateMockData(): ChartData[] {
-    const data: ChartData[] = [];
-    let price = 150;
-    const date = new Date();
-    date.setMonth(date.getMonth() - 1);
-    
-    for (let i = 0; i < 30; i++) {
-        price = price + (Math.random() * 4 - 2);
-        date.setDate(date.getDate() + 1);
-        data.push({ time: date.toISOString().split('T')[0], value: price });
-    }
-    return data;
 }
