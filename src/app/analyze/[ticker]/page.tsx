@@ -37,7 +37,12 @@ export default function AnalyzePage() {
             });
             
             if (res.ok) {
-            setData(await res.json());
+                const result = await res.json();
+                // Ensure history is always an array to prevent client crash
+                if (!Array.isArray(result.history)) {
+                    result.history = [];
+                }
+                setData(result);
             }
         } catch (e) {
             console.error(e);
