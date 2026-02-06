@@ -1,3 +1,6 @@
+
+import { subDays, format } from 'date-fns';
+
 export interface MarketData {
   price: number;
   changePercent: number;
@@ -35,6 +38,8 @@ export async function getMarketData(ticker: string): Promise<MarketData> {
         const data = await response.json();
         if (data.results && data.results.length > 0) {
           const res = data.results[0];
+          // Calculate change percent since Polygon 'prev' endpoint doesn't give it directly usually
+          // But for simplicity let's assume open vs close
           const change = ((res.c - res.o) / res.o) * 100;
           
           return {
@@ -55,8 +60,8 @@ export async function getMarketData(ticker: string): Promise<MarketData> {
 
   // 2. Fallback / Mock Data
   const hash = symbol.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const basePrice = (hash % 500) + 10; 
-  const volatility = (hash % 5) + 1; 
+  const basePrice = (hash % 500) + 10; // Price between 10 and 510
+  const volatility = (hash % 5) + 1; // 1-5% volatility
   
   const changeDir = hash % 2 === 0 ? 1 : -1;
   const changePercent = (Math.random() * volatility) * changeDir;
@@ -73,7 +78,37 @@ export async function getMarketData(ticker: string): Promise<MarketData> {
 }
 
 export async function getHistoricalData(ticker: string): Promise<Candle[]> {
-    // Generate 30 days of mock candles
+    const symbol = ticker.toUpperCase();
+
+    // 1. Try Real API
+    if (POLYGON_API_KEY && POLYGON_API_KEY !== 'placeholder') {
+        try {
+            const toDate = format(new Date(), 'yyyy-MM-dd');
+            const fromDate = format(subDays(new Date(), 90), 'yyyy-MM-dd'); // 90 days of history
+
+            const response = await fetch(
+                `https://api.polygon.io/v2/aggs/ticker/${symbol}/range/1/day/${fromDate}/${toDate}?adjusted=true&sort=asc&limit=500&apiKey=${POLYGON_API_KEY}`
+            );
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.results && Array.isArray(data.results)) {
+                    return data.results.map((item: any) => ({
+                        time: new Date(item.t).toISOString().split('T')[0],
+                        open: item.o,
+                        high: item.h,
+                        low: item.l,
+                        close: item.c
+                    }));
+                }
+            }
+             console.warn(`Polygon History API failed for ${symbol}, falling back to mock.`);
+        } catch (error) {
+            console.error("Polygon History API Error:", error);
+        }
+    }
+
+    // 2. Fallback / Mock Data
     const candles: Candle[] = [];
     let price = 100 + (ticker.length * 10);
     const now = new Date();
