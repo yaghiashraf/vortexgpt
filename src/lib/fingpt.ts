@@ -1,15 +1,19 @@
+
 import { HfInference } from '@huggingface/inference';
 import { MarketData, AnalysisData } from '@/types';
 
 const hf = new HfInference(process.env.HF_API_TOKEN);
 
 export async function analyzeTicker(ticker: string, marketData: MarketData): Promise<Omit<AnalysisData, 'ticker' | 'marketData'>> {
+    console.log("Analyzing with FinGPT. Token Present:", !!process.env.HF_API_TOKEN);
+
     // 1. Mock Mode (if no token or placeholder)
     if (!process.env.HF_API_TOKEN || process.env.HF_API_TOKEN === 'hf_placeholder') {
+        console.warn("No valid HF Token found, using mock.");
         return generateMockAnalysis(ticker, marketData);
     }
 
-  const prompt = `<s>[INST] <<SYS>>
+  const prompt = `<|system|>
 You are VortexGPT, an elite AI financial analyst.
 Analyze ${ticker} based on the following data:
 - Price: ${marketData.price}
@@ -26,22 +30,25 @@ Return a valid JSON object strictly matching this schema:
   "catalyst": "string (concise reason)",
   "warning": "string (risk factor)"
 }
-Do not include markdown formatting or extra text. Just the JSON.
-<</SYS>>
-Analyze ${ticker} now. [/INST]`;
+Do not include markdown formatting or extra text. Just the JSON.</s>
+<|user|>
+Analyze ${ticker} now.</s>
+<|assistant|>`;
 
   try {
     const response = await hf.textGeneration({
-      model: process.env.FINGPT_MODEL || 'MistralAI/Mistral-7B-Instruct-v0.3', // Better general instruction following than AdaptLLM for strict JSON
+      model: process.env.FINGPT_MODEL || 'HuggingFaceH4/zephyr-7b-beta', 
       inputs: prompt,
       parameters: {
         max_new_tokens: 500,
-        temperature: 0.1, // Lower temperature for consistent JSON
+        temperature: 0.1,
         return_full_text: false,
       },
     });
 
     const text = response.generated_text;
+    console.log("FinGPT Raw Response:", text);
+
     // Extract JSON from potential markdown wrapping
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("No JSON found in response");

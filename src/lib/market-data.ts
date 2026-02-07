@@ -83,8 +83,8 @@ export async function getHistoricalData(ticker: string): Promise<Candle[]> {
     // 1. Try Real API
     if (POLYGON_API_KEY && POLYGON_API_KEY !== 'placeholder') {
         try {
-            const toDate = format(new Date(), 'yyyy-MM-dd');
-            const fromDate = format(subDays(new Date(), 90), 'yyyy-MM-dd'); // 90 days of history
+            const toDate = format(subDays(new Date(), 1), 'yyyy-MM-dd'); // End yesterday to avoid premium restrictions
+            const fromDate = format(subDays(new Date(), 90), 'yyyy-MM-dd');
 
             const response = await fetch(
                 `https://api.polygon.io/v2/aggs/ticker/${symbol}/range/1/day/${fromDate}/${toDate}?adjusted=true&sort=asc&limit=500&apiKey=${POLYGON_API_KEY}`
