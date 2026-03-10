@@ -2,6 +2,7 @@
 import { MarketData, AnalysisData } from '@/types';
 
 const hfToken = process.env.HF_API_TOKEN?.trim();
+const isYoloMode = process.env.YOLO_MODE === 'true';
 
 export async function analyzeTicker(ticker: string, marketData: MarketData): Promise<Omit<AnalysisData, 'ticker' | 'marketData'>> {
     console.log("Analyzing with FinGPT. Token Present:", !!hfToken);
@@ -12,8 +13,12 @@ export async function analyzeTicker(ticker: string, marketData: MarketData): Pro
         return generateMockAnalysis(ticker, marketData);
     }
 
+  const persona = isYoloMode 
+    ? `You are a degenerate r/WallStreetBets trader. Analyze the ticker with maximum YOLO energy. Use emojis like 🚀, 💎🙌, 🦍, and 📉. Be extremely hyped or extremely bearish. No neutral opinions. Your warnings should be about "paper hands" or "getting liquidated".`
+    : `You are VortexGPT, an elite AI financial analyst.`;
+
   const prompt = `<|system|>
-You are VortexGPT, an elite AI financial analyst.
+${persona}
 Analyze ${ticker} based on the following data:
 - Price: ${marketData.price}
 - 24h Change: ${marketData.changePercent.toFixed(2)}%
