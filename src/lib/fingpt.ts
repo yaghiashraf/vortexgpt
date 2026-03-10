@@ -1,14 +1,13 @@
 
-import { HfInference } from '@huggingface/inference';
 import { MarketData, AnalysisData } from '@/types';
 
-const hf = new HfInference(process.env.HF_API_TOKEN);
+const hfToken = process.env.HF_API_TOKEN?.trim();
 
 export async function analyzeTicker(ticker: string, marketData: MarketData): Promise<Omit<AnalysisData, 'ticker' | 'marketData'>> {
-    console.log("Analyzing with FinGPT. Token Present:", !!process.env.HF_API_TOKEN);
+    console.log("Analyzing with FinGPT. Token Present:", !!hfToken);
 
     // 1. Mock Mode (if no token or placeholder)
-    if (!process.env.HF_API_TOKEN || process.env.HF_API_TOKEN === 'hf_placeholder') {
+    if (!hfToken || hfToken === 'hf_placeholder') {
         console.warn("No valid HF Token found, using mock.");
         return generateMockAnalysis(ticker, marketData);
     }
@@ -36,21 +35,35 @@ Analyze ${ticker} now.</s>
 <|assistant|>`;
 
   try {
-    const response = await hf.textGeneration({
-      model: process.env.FINGPT_MODEL || 'HuggingFaceH4/zephyr-7b-beta', 
-      inputs: prompt,
-      parameters: {
-        max_new_tokens: 500,
-        temperature: 0.1,
-        return_full_text: false,
+    const model = process.env.FINGPT_MODEL || 'HuggingFaceH4/zephyr-7b-beta';
+    
+    // Using direct fetch to new router to avoid 410 errors from outdated SDKs
+    const response = await fetch(`https://router.huggingface.co/hf-inference/models/${model}`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${hfToken}`,
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        inputs: prompt,
+        parameters: {
+          max_new_tokens: 500,
+          temperature: 0.1,
+          return_full_text: false,
+        }
+      })
     });
 
-    const text = response.generated_text;
+    if (!response.ok) {
+      throw new Error(`Hugging Face API returned ${response.status}: ${await response.text()}`);
+    }
+
+    const data = await response.json();
+    const text = Array.isArray(data) ? data[0]?.generated_text : data.generated_text;
     console.log("FinGPT Raw Response:", text);
 
     // Extract JSON from potential markdown wrapping
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const jsonMatch = text?.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("No JSON found in response");
     
     const parsed = JSON.parse(jsonMatch[0]);
