@@ -37,16 +37,16 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <header className="border-b sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
-             <div className="container mx-auto flex h-14 items-center">
+             <div className="container mx-auto px-4 md:px-8 flex h-14 items-center">
                 <MainNav />
              </div>
           </header>
           
-          <main className="flex-1 container mx-auto py-6">
+          <main className="flex-1 container mx-auto px-4 md:px-8 py-6">
             {children}
           </main>
           
-          <footer className="border-t py-6 md:px-8 md:py-0">
+          <footer className="border-t py-6 px-4 md:px-8 md:py-0">
             <div className="container mx-auto flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
               <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
                 Built by VortexGPT. Market data is simulated for demo purposes.
